@@ -7,10 +7,15 @@ app.use(express.json());
 // POST route for receiving form data
 app.post("/api/check", async (req, res) => {
     const formData = req.body;
-    console.log("✅ Received:", formData);
+    console.log("✅ Received form data:", formData);
+
+    // Log environment variables status (not actual passwords)
+    console.log("📦 EMAIL_USER set:", !!process.env.EMAIL_USER);
+    console.log("📦 EMAIL_PASS set:", !!process.env.EMAIL_PASS);
+    console.log("📦 EMAIL_TO set:", !!process.env.EMAIL_TO);
 
     try {
-        // Create email transporter
+        // Create transporter
         let transporter = nodemailer.createTransport({
             service: "Gmail",
             auth: {
@@ -19,7 +24,9 @@ app.post("/api/check", async (req, res) => {
             }
         });
 
-        // Email content
+        console.log("🔄 Attempting to send email...");
+
+        // Mail options
         let mailOptions = {
             from: `"Form Bot" <${process.env.EMAIL_USER}>`,
             to: process.env.EMAIL_TO,
@@ -27,14 +34,19 @@ app.post("/api/check", async (req, res) => {
             text: JSON.stringify(formData, null, 2)
         };
 
-        // Send email
-        await transporter.sendMail(mailOptions);
-        console.log("📧 Email sent successfully!");
+        // Send the email
+        let info = await transporter.sendMail(mailOptions);
+        console.log("✅ Email sent! Message ID:", info.messageId);
 
         res.json({ status: "ok", message: "Email sent" });
+
     } catch (error) {
-        console.error("❌ Email error:", error);
-        res.status(500).json({ status: "error", message: "Failed to send email" });
+        console.error("❌ Email error details:", error);
+        res.status(500).json({
+            status: "error",
+            message: "Failed to send email",
+            error: error.message
+        });
     }
 });
 
