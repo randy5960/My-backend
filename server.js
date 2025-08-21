@@ -1,57 +1,41 @@
 const express = require("express");
+const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
 
 const app = express();
-app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
-// POST route for receiving form data
-app.post("/api/check", async (req, res) => {
-    const formData = req.body;
-    console.log("✅ Received form data:", formData);
-
-    // Log environment variables status (not actual passwords)
-    console.log("📦 EMAIL_USER set:", !!process.env.EMAIL_USER);
-    console.log("📦 EMAIL_PASS set:", !!process.env.EMAIL_PASS);
-    console.log("📦 EMAIL_TO set:", !!process.env.EMAIL_TO);
-
-    try {
-        // Create transporter
-        let transporter = nodemailer.createTransport({
-            service: "Gmail",
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-            }
-        });
-
-        console.log("🔄 Attempting to send email...");
-
-        // Mail options
-        let mailOptions = {
-            from: `"Form Bot" <${process.env.EMAIL_USER}>`,
-            to: process.env.EMAIL_TO,
-            subject: "New Form Submission",
-            text: JSON.stringify(formData, null, 2)
-        };
-
-        // Send the email
-        let info = await transporter.sendMail(mailOptions);
-        console.log("✅ Email sent! Message ID:", info.messageId);
-
-        res.json({ status: "ok", message: "Email sent" });
-
-    } catch (error) {
-        console.error("❌ Email error details:", error);
-        res.status(500).json({
-            status: "error",
-            message: "Failed to send email",
-            error: error.message
-        });
-    }
+// Configure Nodemailer (use Gmail as example)
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER, // your email
+    pass: process.env.EMAIL_PASS  // your email password or app password
+  }
 });
 
-// For Render: listen on assigned port
+// Endpoint to handle form submissions
+app.post("/", async (req, res) => {
+  console.log("Form Data Received:", req.body);
+
+  // Build email content
+  const mailOptions = {
+    from: `"Form Bot" <${process.env.EMAIL_USER}>`,
+    to: process.env.RECEIVE_EMAIL, // where to send the form
+    subject: "New Form Submission",
+    text: JSON.stringify(req.body, null, 2)
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log("✅ Email sent successfully");
+    res.json({ status: "success", message: "Form received and emailed!" });
+  } catch (err) {
+    console.error("❌ Email failed:", err);
+    res.status(500).json({ status: "error", message: "Failed to send email" });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
