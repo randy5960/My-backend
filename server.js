@@ -6,25 +6,34 @@ const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// Configure Nodemailer (use Gmail as example)
+// Configure Nodemailer
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: process.env.EMAIL_USER, // your email
-    pass: process.env.EMAIL_PASS  // your email password or app password
+    user: process.env.EMAIL_USER, // Gmail address
+    pass: process.env.EMAIL_PASS  // App password (not regular password)
   }
 });
 
-// Endpoint to handle form submissions
-app.post("/", async (req, res) => {
-  console.log("Form Data Received:", req.body);
+// ✅ Your API endpoint
+app.post("/api/check", async (req, res) => {
+  console.log("📩 Form Data:", req.body);
 
-  // Build email content
+  // Format form data as HTML table
+  let htmlContent = `
+    <h2>New Form Submission</h2>
+    <table border="1" cellpadding="6" cellspacing="0">
+      ${Object.entries(req.body)
+        .map(([key, value]) => `<tr><td><b>${key}</b></td><td>${value}</td></tr>`)
+        .join("")}
+    </table>
+  `;
+
   const mailOptions = {
     from: `"Form Bot" <${process.env.EMAIL_USER}>`,
-    to: process.env.RECEIVE_EMAIL, // where to send the form
+    to: process.env.RECEIVE_EMAIL, // destination inbox
     subject: "New Form Submission",
-    text: JSON.stringify(req.body, null, 2)
+    html: htmlContent
   };
 
   try {
@@ -38,4 +47,4 @@ app.post("/", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
