@@ -3,13 +3,13 @@ const nodemailer = require("nodemailer");
 
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // handle HTML form submissions
 
 // POST route for receiving form data
 app.post("/api/check", async (req, res) => {
     const formData = req.body;
-    console.log("✅ Received form data:", req.body, formData);
+    console.log("✅ Received form data:", formData);
 
-    // Log environment variables status (not actual passwords)
     console.log("📦 EMAIL_USER set:", !!process.env.EMAIL_USER);
     console.log("📦 EMAIL_PASS set:", !!process.env.EMAIL_PASS);
     console.log("📦 EMAIL_TO set:", !!process.env.EMAIL_TO);
@@ -31,7 +31,7 @@ app.post("/api/check", async (req, res) => {
             from: `"Form Bot" <${process.env.EMAIL_USER}>`,
             to: process.env.EMAIL_TO,
             subject: "New Form Submission",
-            text: JSON.stringify(formData, req.body, null, 2)
+            text: JSON.stringify(formData, null, 2)
         };
 
         // Send the email
