@@ -1,5 +1,5 @@
 {
-  "name": "gumtree-backend",
+  "name": "my-backend",
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
