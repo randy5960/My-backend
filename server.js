@@ -7,16 +7,7 @@ app.use(express.json());
 // POST route for receiving form data
 app.post("/api/check", async (req, res) => {
     const formData = req.body;
-      
-      let htmlContent = `
-    <h2>New Form Submission</h2>
-    <table border="1" cellpadding="6" cellspacing="0">
-      ${Object.entries(req.body)
-        .map(([key, value]) => `<tr><td><b>${key}</b></td><td>${value}</td></tr>`)
-        .join("")}
-    </table>
-  `;
-    console.log("✅ Received form data:", req.body);
+    console.log("✅ Received form data:", req.body, formData);
 
     // Log environment variables status (not actual passwords)
     console.log("📦 EMAIL_USER set:", !!process.env.EMAIL_USER);
@@ -40,8 +31,7 @@ app.post("/api/check", async (req, res) => {
             from: `"Form Bot" <${process.env.EMAIL_USER}>`,
             to: process.env.EMAIL_TO,
             subject: "New Form Submission",
-            text: JSON.stringify(req.body, null, 2)
-            html: htmlContent()
+            text: JSON.stringify(formData, req.body, null, 2)
         };
 
         // Send the email
